@@ -6,41 +6,35 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" id="studentView" style="display:none;">
+    <!-- Student View -->
+    <div class="container" id="studentView" style="display:none; width: 600px;">
         <h2>Student Portal (<span id="userGroup"></span>)</h2>
-        <div id="statusContainer" style="display:none;">
-            <h3>Submission Status: <span id="subStatus"></span></h3>
-            <p><strong>Assignment:</strong> <span id="subTitle"></span></p>
-            <p><strong>URL:</strong> <a id="subLinkText" href="#" target="_blank">View Link</a></p>
-            <div id="resubmitSection" style="display:none;">
-                <p style="color: red;">Your submission was declined. You can resubmit below:</p>
-            </div>
+        <div id="studentNav" style="margin-bottom: 15px;">
+            <button onclick="resetStudentView()" id="backToAssignBtn" style="display:none; background: #6c757d;">&larr; Back to Assignments</button>
         </div>
-
-        <form id="subForm">
-            <h3>Submit Assignment</h3>
-            <input type="text" id="name" placeholder="Full Name" required>
-            <input type="text" id="regNo" placeholder="Registration Number" required>
-            <select id="assignSelect" required></select>
-            <input type="url" id="url" placeholder="Submission URL" required>
-            <button type="submit" id="submitBtn">Submit Assignment</button>
-        </form>
+        <div id="studentContent"></div>
         <button onclick="logout()" style="background: #dc3545; margin-top: 20px;">Logout</button>
     </div>
 
-    <div class="container" id="teacherView" style="display:none; width: 600px;">
-        <h2>Teacher Dashboard (<span id="teacherClasses"></span>)</h2>
-        <form id="assignForm">
+    <!-- Teacher View -->
+    <div class="container" id="teacherView" style="display:none; width: 650px;">
+        <h2>Teacher Dashboard</h2>
+        <p>Managed Classes: <span id="teacherClasses" style="font-weight: bold;"></span></p>
+        
+        <form id="assignForm" style="margin-bottom: 20px;">
             <h3>Publish Assignment</h3>
             <input type="text" id="astTitle" placeholder="Assignment Title" required>
             <select id="targetGroup" required></select>
-            <button type="submit">Publish</button>
+            <button type="submit">Publish Assignment</button>
         </form>
         <hr>
-        <h3>Submissions History & Review</h3>
-        <ul id="subList" style="padding-left: 0; list-style: none;"></ul>
+
+        <div id="teacherBreadcrumb" style="margin-bottom: 15px;"></div>
+        <div id="teacherContent"></div>
+
         <button onclick="logout()" style="background: #dc3545; margin-top: 20px;">Logout</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

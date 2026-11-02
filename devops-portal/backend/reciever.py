@@ -1,24 +1,15 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from fastapi import FastAPI, Request
 import json
 
-class ReportReceiverHandler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        report = json.loads(post_data.decode('utf-8'))
-        
-        with open("test-report.json", "w", encoding="utf-8") as f:
-            json.dump(report, f, indent=4)
-            
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Report saved successfully as test-report.json")
+app = FastAPI()
 
-def run_server(server_class=HTTPServer, handler_class=ReportReceiverHandler, port=5000):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    print(f"Local Report Receiver running on port {port}...")
-    httpd.serve_forever()
+@app.post("/report")
+async def receive_report(request: Request):
+    data = await request.json()
+    with open("test-report.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+    return {"status": "success", "message": "Report saved successfully"}
 
-if __name__ == '__main__':
-    run_server()
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
