@@ -1,0 +1,26 @@
+[
+    {
+        "username": "FA23-BAI-012",
+        "password": "password123",
+        "role": "student",
+        "class_group": "AI7"
+    },
+    {
+        "username": "FA23-CS-001",
+        "password": "password123",
+        "role": "student",
+        "class_group": "CS5"
+    },
+    {
+        "username": "FA23-SC-002",
+        "password": "password123",
+        "role": "student",
+        "class_group": "SC2"
+    },
+    {
+        "username": "teacher1",
+        "password": "password123",
+        "role": "teacher",
+        "class_group": ["AI7", "CS5"]
+    }
+]

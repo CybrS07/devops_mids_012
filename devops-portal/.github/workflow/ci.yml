@@ -1,0 +1,68 @@
+name: DevOps CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install fastapi uvicorn pydantic pytest requests httpx
+
+      - name: Run Pytest and Generate Results
+        id: run_tests
+        continue-on-error: true
+        run: pytest --json-report --json-report-file=report.json
+
+      - name: Send Report to Localhost / Receiver
+        if: always()
+        run: |
+          python -c "
+          import requests, json
+          try:
+              with open('report.json') as f:
+                  data = json.load(f)
+              payload = {
+                  'repository': '${{ github.repository }}',
+                  'branch': '${{ github.ref_name }}',
+                  'commit_sha': '${{ github.sha }}',
+                  'run_id': '${{ github.run_id }}',
+                  'timestamp': '${{ github.event.head_commit.timestamp }}',
+                  'summary': data.get('summary', {})
+              }
+              requests.post('http://localhost:5000', json=payload, timeout=5)
+          except Exception as e:
+              print('Receiver forwarding skipped or failed:', e)
+          "
+
+      - name: Fail pipeline if tests failed
+        if: steps.run_tests.outcome != 'success'
+        run: exit 1
+
+  # Bonus: Conditional Deployment to GitHub Pages
+  deploy:
+    needs: test
+    if: success() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: './frontend'
+      - id: deployment
+        uses: actions/deploy-pages@v4
