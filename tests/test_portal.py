@@ -4,7 +4,12 @@ from backend.app import app
 client = TestClient(app)
 
 def test_valid_submission():
-    """Complete details and a valid submission URL"""
+    """Complete details and a valid submission URL[cite: 2]"""
+    client.post("/api/assignments", json={
+        "title": "DevOps Lab Mid",
+        "target_group": "AI7",
+        "created_by": "teacher"
+    })
     response = client.post("/api/submissions", json={
         "name": "Muhammad Taha",
         "registration_number": "FA23-BAI-012",
@@ -16,7 +21,7 @@ def test_valid_submission():
     assert response.json()["status"] == "success"
 
 def test_missing_registration_number():
-    """Missing registration number"""
+    """Missing registration number[cite: 2]"""
     response = client.post("/api/submissions", json={
         "name": "Muhammad Taha",
         "registration_number": "",
@@ -28,7 +33,7 @@ def test_missing_registration_number():
     assert "Missing registration number" in response.json()["detail"]
 
 def test_invalid_submission_url():
-    """Invalid submission URL"""
+    """Invalid submission URL[cite: 2]"""
     response = client.post("/api/submissions", json={
         "name": "Muhammad Taha",
         "registration_number": "FA23-BAI-012",

@@ -8,14 +8,6 @@
         "status": "Approved"
     },
     {
-        "name": "asdasd",
-        "registration_number": "FA23-CS-001",
-        "assignment_title": "Killers",
-        "submission_url": "http://google.com/",
-        "class_group": "CS5",
-        "status": "Declined"
-    },
-    {
         "name": "Muhammad Taha",
         "registration_number": "FA23-BAI-012",
         "assignment_title": "DevOps Lab Mid",

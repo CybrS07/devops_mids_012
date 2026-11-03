@@ -1,25 +1,21 @@
 [project]
-name = "devops-portal"
+name = "devops-mids-012"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "Taha", email = "jamer54@gmail.com" }
+    { name = "Taha", email = "jamerhn7854@gmail.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "email-validator>=2.3.0",
     "fastapi>=0.162.0",
-    "httpx>=0.28.1",
-    "httpx2>=2.16.0",
-    "pydantic[email]>=2.14.2",
-    "pytest>=9.2.0",
+    "pydantic>=2.14.2",
     "requests>=2.34.2",
     "uvicorn>=0.54.0",
 ]
 
 [project.scripts]
-devops-portal = "devops_portal:main"
+devops-mids-012 = "devops_mids_012:main"
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]
