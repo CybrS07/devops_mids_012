@@ -3,5 +3,15 @@
         "title": "Killers",
         "target_group": "CS5",
         "created_by": "teacher1"
+    },
+    {
+        "title": "DevOps Lab Mid",
+        "target_group": "AI7",
+        "created_by": "teacher"
+    },
+    {
+        "title": "DevOps Lab Mid",
+        "target_group": "AI7",
+        "created_by": "teacher"
     }
 ]
