@@ -3,7 +3,7 @@ import json
 import os
 
 app = Flask(__name__)
-RECEIVER_SECRET = os.environ.get("RECEIVER_SECRET", "my-super-secret-token")
+RECEIVER_SECRET = os.environ.get("RECEIVER_SECRET", "my-super-secret-token-123")
 
 @app.route('/report', methods=['POST'])
 def receive_report():
