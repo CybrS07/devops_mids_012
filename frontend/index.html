@@ -1,24 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>DevOps Portal - Login</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Assignment Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <h2>Portal Login</h2>
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="Username" required>
-            <div style="position: relative;">
-                <input type="password" id="password" placeholder="Password" required style="width: 100%;">
-                <label style="font-size: 12px; display: block; margin-top: 5px;">
-                    <input type="checkbox" id="showPassword" style="width: auto;"> Show Password
-                </label>
+<body data-page="login">
+  <div class="auth">
+    <section class="auth-hero">
+      <div>
+        <div class="brand"><div class="logo">AP</div><div><b>Assignment Portal</b><span>DevOps for Cloud Computing · CSC418</span></div></div>
+        <h1>Submit. Review.<br>Ship with confidence.</h1>
+        <p class="lead">One place for students to submit assignment links and for teachers to review them, with live status tracking.</p>
+      </div>
+      <ul class="feature-list">
+        <li><span class="dot">&#10003;</span> Instant validation of required fields and links</li>
+        <li><span class="dot">&#9679;</span> Live approval status for every submission</li>
+        <li><span class="dot">&#9650;</span> Class-wise charts and review insights</li>
+      </ul>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p class="sub">Sign in with your registration number or teacher ID.</p>
+        <div class="alert" id="loginError" hidden></div>
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="username">Username</label>
+            <input id="username" autocomplete="username" placeholder="e.g. FA23-BAI-012" required>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="pw-wrap">
+              <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+              <button type="button" id="togglePw">Show</button>
             </div>
-            <button type="submit" style="margin-top: 15px;">Login</button>
+          </div>
+          <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Sign in</button>
         </form>
-    </div>
-    <script src="script.js"></script>
+        <div class="demo">
+          <small>Demo accounts (click to fill)</small>
+          <div class="chips">
+            <button type="button" class="chip-btn" data-demo data-user="FA23-BAI-012">Student · AI7</button>
+            <button type="button" class="chip-btn" data-demo data-user="FA23-CS-001">Student · CS5</button>
+            <button type="button" class="chip-btn" data-demo data-user="teacher1">Teacher</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,40 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · Assignment Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <!-- Student View -->
-    <div class="container" id="studentView" style="display:none; width: 600px;">
-        <h2>Student Portal (<span id="userGroup"></span>)</h2>
-        <div id="studentNav" style="margin-bottom: 15px;">
-            <button onclick="resetStudentView()" id="backToAssignBtn" style="display:none; background: #6c757d;">&larr; Back to Assignments</button>
-        </div>
-        <div id="studentContent"></div>
-        <button onclick="logout()" style="background: #dc3545; margin-top: 20px;">Logout</button>
+<body data-page="dashboard">
+  <div class="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="view" aria-live="polite"><div class="loading">Loading your dashboard…</div></main>
     </div>
-
-    <!-- Teacher View -->
-    <div class="container" id="teacherView" style="display:none; width: 650px;">
-        <h2>Teacher Dashboard</h2>
-        <p>Managed Classes: <span id="teacherClasses" style="font-weight: bold;"></span></p>
-        
-        <form id="assignForm" style="margin-bottom: 20px;">
-            <h3>Publish Assignment</h3>
-            <input type="text" id="astTitle" placeholder="Assignment Title" required>
-            <select id="targetGroup" required></select>
-            <button type="submit">Publish Assignment</button>
-        </form>
-        <hr>
-
-        <div id="teacherBreadcrumb" style="margin-bottom: 15px;"></div>
-        <div id="teacherContent"></div>
-
-        <button onclick="logout()" style="background: #dc3545; margin-top: 20px;">Logout</button>
-    </div>
-
-    <script src="script.js"></script>
+  </div>
+  <div id="modalRoot"></div>
+  <div class="toasts" id="toasts"></div>
+  <script src="script.js"></script>
 </body>
 </html>
