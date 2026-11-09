@@ -33,7 +33,8 @@ jobs:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
-          authkey: ${{ secrets.TS_AUTHKEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
 
       - name: Send Report to Main PC via Tailscale
         if: always()
@@ -64,7 +65,7 @@ jobs:
               'branch': os.environ.get('GITHUB_REF_NAME'),
               'commit_sha': os.environ.get('GITHUB_SHA'),
               'run_id': os.environ.get('GITHUB_RUN_ID'),
-              'timestamp': datetime.datetime.utcnow().isoformat(),
+              'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
               'summary': {
                   'total': summary.get('total', 0),
                   'passed': summary.get('passed', 0),
