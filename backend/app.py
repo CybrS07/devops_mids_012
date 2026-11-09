@@ -81,8 +81,15 @@ def check_submission_status(reg_no: str):
 
 @app.post("/api/submissions")
 def create_submission(sub: Submission):
-    if not sub.registration_number.strip():
-        raise HTTPException(status_code=400, detail="Missing registration number")
+    required = {
+        "name": sub.name,
+        "registration number": sub.registration_number,
+        "assignment title": sub.assignment_title,
+        "class group": sub.class_group,
+    }
+    for label, value in required.items():
+        if not value.strip():
+            raise HTTPException(status_code=400, detail=f"Missing {label}")
     
     submissions = read_json(SUBMISSIONS_FILE)
     existing_index = -1
