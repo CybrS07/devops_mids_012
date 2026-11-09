@@ -10,6 +10,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -17,13 +22,13 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pytest requests pytest-json-report
+          uv sync --all-extras
 
       - name: Run Tests
         id: run_tests
         continue-on-error: true
         run: |
-          pytest --json-report --json-report-file=report.json tests/
+          uv run pytest --json-report --json-report-file=report.json tests/
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
@@ -36,7 +41,7 @@ jobs:
           PC_TAILSCALE_IP: ${{ secrets.PC_TAILSCALE_IP }}
           RECEIVER_SECRET: ${{ secrets.RECEIVER_SECRET }}
         run: |
-          python -c "
+          uv run python -c "
           import json, os, requests, datetime
 
           if os.path.exists('report.json'):
