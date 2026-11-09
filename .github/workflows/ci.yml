@@ -1,27 +1,86 @@
 name: CI Pipeline
 
-on:
-  push:               # run on every push, to any branch
-  workflow_dispatch:  # allow manual runs from the Actions tab
+on: [push]
 
 jobs:
   test:
-    name: Run automated tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          pip install uv
-          uv sync
+          pip install pytest requests
 
-      - name: Run automated tests
-        run: uv run python -m pytest -v
+      - name: Run Tests
+        id: run_tests
+        continue-on-error: true
+        run: |
+          pytest --json-report --json-report-file=report.json tests/
+
+      # Connect GitHub Actions runner to your Tailscale network
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Send Report to Main PC via Tailscale
+        if: always()
+        env:
+          PC_TAILSCALE_IP: ${{ secrets.PC_TAILSCALE_IP }}
+          RECEIVER_SECRET: ${{ secrets.RECEIVER_SECRET }}
+        run: |
+          python -c "
+          import json, os, requests, datetime
+
+          if os.path.exists('report.json'):
+              with open('report.json') as f:
+                  pytest_data = json.load(f)
+          else:
+              pytest_data = {}
+
+          summary = pytest_data.get('summary', {})
+          tests = []
+          for item in pytest_data.get('tests', []):
+              tests.append({
+                  'name': item.get('nodeid'),
+                  'outcome': item.get('outcome'),
+                  'failure_message': item.get('call', {}).get('longrepr', '') if item.get('outcome') == 'failed' else None
+              })
+
+          payload = {
+              'repository': os.environ.get('GITHUB_REPOSITORY'),
+              'branch': os.environ.get('GITHUB_REF_NAME'),
+              'commit_sha': os.environ.get('GITHUB_SHA'),
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'timestamp': datetime.datetime.utcnow().isoformat(),
+              'summary': {
+                  'total': summary.get('total', 0),
+                  'passed': summary.get('passed', 0),
+                  'failed': summary.get('failed', 0),
+                  'status': 'passed' if summary.get('failed', 0) == 0 else 'failed'
+              },
+              'tests': tests
+          }
+
+          ip = os.environ.get('PC_TAILSCALE_IP')
+          secret = os.environ.get('RECEIVER_SECRET')
+          url = f'http://{ip}:5000/report'
+          headers = {'Authorization': f'Bearer {secret}'}
+
+          response = requests.post(url, json=payload, headers=headers)
+          print('Report HTTP status:', response.status_code)
+          "
+
+      - name: Fail Workflow on Test Failure
+        if: steps.run_tests.outcome == 'failure'
+        run: exit 1
