@@ -5,7 +5,6 @@
 
 // If the page is served by the backend itself (port 8000) use same-origin, else call the backend directly.
 const API = location.port === "8000" ? "" : location.hostname.endsWith("github.io") ? "https://desktop-bs7ukpa.taild269e1.ts.net" : "http://127.0.0.1:8000";
-
 /* ---------- small helpers ---------- */
 const $ = (sel, root = document) => root.querySelector(sel);
 const enc = encodeURIComponent;
