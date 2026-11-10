@@ -19,7 +19,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --locked
+        run: uv sync
 
       # A failing test makes pytest exit non-zero, which fails this step
       # and therefore the job. No continue-on-error here.
