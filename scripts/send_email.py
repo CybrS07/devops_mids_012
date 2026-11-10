@@ -4,14 +4,20 @@ Credentials come from environment variables (set from GitHub secrets):
   SMTP_HOST, SMTP_PORT (default 587), SMTP_USER, SMTP_PASSWORD
   EMAIL_TO    recipient address(es), comma separated  (configurable)
   EMAIL_FROM  optional, defaults to SMTP_USER
+  BREVO_API_KEY  if set, send through Brevo's HTTP API instead of SMTP
+                 (then only BREVO_API_KEY, EMAIL_FROM and EMAIL_TO are needed;
+                 EMAIL_FROM must be a sender verified in Brevo)
   DRY_RUN=1   print the email instead of sending it
 Port 465 uses SSL, any other port uses STARTTLS.
 """
 import json
 import os
+import base64
 import smtplib
 import ssl
 import sys
+import urllib.error
+import urllib.request
 from email.message import EmailMessage
 
 from send_report import build_payload  # same folder
@@ -55,6 +61,42 @@ def build_message(payload: dict, sender: str, to: str) -> EmailMessage:
     return msg
 
 
+def send_via_brevo_api(payload: dict, msg: EmailMessage, sender: str, to: str) -> int:
+    """POST the email to Brevo's transactional email API (HTTPS, no SMTP)."""
+    url = os.environ.get("BREVO_API_URL", "https://api.brevo.com/v3/smtp/email")
+    body = {
+        "sender": {"email": sender, "name": "CI Test Report"},
+        "to": [{"email": a.strip()} for a in to.split(",") if a.strip()],
+        "subject": msg["Subject"],
+        "textContent": msg.get_body(("plain",)).get_content(),
+        "attachment": [{
+            "name": "testreport.json",
+            "content": base64.b64encode(json.dumps(payload, indent=4).encode()).decode(),
+        }],
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers={
+            "api-key": os.environ["BREVO_API_KEY"],
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            print(f"Brevo API answered HTTP {resp.status}: {resp.read().decode()}")
+    except urllib.error.HTTPError as e:
+        print(f"Brevo API rejected the request: HTTP {e.code}: {e.read().decode()}")
+        return 1
+    print(f"Sender : {sender}")
+    print(f"To     : {to}")
+    print(f"Subject: {msg['Subject']}")
+    print(f"Report sent via Brevo API ({payload['summary']['status']})")
+    return 0
+
+
 def main() -> int:
     payload = build_payload()
     to = os.environ.get("EMAIL_TO", "")
@@ -62,6 +104,14 @@ def main() -> int:
         msg = build_message(payload, os.environ.get("EMAIL_FROM", "ci@example.com"), to or "you@example.com")
         print(msg.as_string())
         return 0
+
+    if os.environ.get("BREVO_API_KEY"):
+        need = [k for k in ("EMAIL_FROM", "EMAIL_TO") if not os.environ.get(k)]
+        if need:
+            print(f"Missing secrets/environment variables: {', '.join(need)}")
+            return 1
+        sender = os.environ["EMAIL_FROM"]
+        return send_via_brevo_api(payload, build_message(payload, sender, to), sender, to)
 
     missing = [k for k in ("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD", "EMAIL_TO") if not os.environ.get(k)]
     if missing:

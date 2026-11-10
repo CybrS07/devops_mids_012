@@ -77,6 +77,8 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           TEST_JOB_RESULT: ${{ needs.test.result }}
         run: python3 scripts/send_email.py
 
