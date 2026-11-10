@@ -70,7 +70,8 @@ def send_via_brevo_api(payload: dict, msg: EmailMessage, sender: str, to: str) -
         "subject": msg["Subject"],
         "textContent": msg.get_body(("plain",)).get_content(),
         "attachment": [{
-            "name": "testreport.json",
+            # Brevo's API rejects the .json extension, so send it as .txt
+            "name": "testreport.json.txt",
             "content": base64.b64encode(json.dumps(payload, indent=4).encode()).decode(),
         }],
     }
