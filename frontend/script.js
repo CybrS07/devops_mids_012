@@ -4,7 +4,8 @@
    ===================================================================== */
 
 // If the page is served by the backend itself (port 8000) use same-origin, else call the backend directly.
-const API = location.port === "8000" ? "" : location.hostname.endsWith("github.io") ? "https://devops-portal.onrender.com" : "http://127.0.0.1:8000";
+const API = location.port === "8000" ? "" : location.hostname.endsWith("github.io") ? "https://desktop-bs7ukpa.YOUR-TAILNET.ts.net" : "http://127.0.0.1:8000";
+
 /* ---------- small helpers ---------- */
 const $ = (sel, root = document) => root.querySelector(sel);
 const enc = encodeURIComponent;
@@ -28,9 +29,9 @@ const ICON = {
 const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
 const STATUS = {
-  Approved: { cls: "approved", color: "#033d24" },
-  Pending: { cls: "pending", color: "#be8c28" },
-  Declined: { cls: "declined", color: "#75190f" },
+  Approved: { cls: "approved", color: "#1f8a5b" },
+  Pending: { cls: "pending", color: "#d99a1f" },
+  Declined: { cls: "declined", color: "#c0392b" },
   "Not submitted": { cls: "none", color: "#8da9c4" },
 };
 const badge = (s) => `<span class="badge ${(STATUS[s] || STATUS["Not submitted"]).cls}">${esc(s)}</span>`;
