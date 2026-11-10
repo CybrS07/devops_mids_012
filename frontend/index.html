@@ -54,5 +54,14 @@
     </section>
   </div>
   <script src="script.js"></script>
+  <script>
+    /* GitHub Pages demo notice: the FastAPI backend runs locally, not on Pages */
+    if (location.hostname.endsWith("github.io")) {
+      var n = document.createElement("div");
+      n.style.cssText = "position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:#fff7e0;color:#5b4300;font:14px Inter,sans-serif;text-align:center;z-index:99";
+      n.textContent = "Static demo of the frontend. The API (FastAPI) runs locally, so sign-in needs the backend running on port 8000.";
+      document.body.appendChild(n);
+    }
+  </script>
 </body>
 </html>

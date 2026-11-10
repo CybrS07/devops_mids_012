@@ -55,3 +55,49 @@ jobs:
           RECEIVER_SECRET: ${{ secrets.RECEIVER_SECRET }}
           TEST_JOB_RESULT: ${{ needs.test.result }}
         run: python3 scripts/send_report.py
+
+  email:
+    name: Email test report
+    needs: test
+    if: always()          # passing AND failing runs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download pytest report
+        uses: actions/download-artifact@v4
+        with:
+          name: pytest-report
+        continue-on-error: true
+
+      - name: Send email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          TEST_JOB_RESULT: ${{ needs.test.result }}
+        run: python3 scripts/send_email.py
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: test
+    # Only on main, and only if ALL tests passed. Otherwise this job is skipped
+    # and the previously published site stays untouched.
+    if: github.ref == 'refs/heads/main' && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend
+      - id: deployment
+        uses: actions/deploy-pages@v4
