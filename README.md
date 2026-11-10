@@ -1,167 +1,152 @@
-# DevOps Assignment Submission Portal
+# Assignment Submission Portal
 
-A simple assignment submission portal built for **CSC418 – DevOps for Cloud Computing** (COMSATS University Islamabad, Attock Campus).
+CSC418 – DevOps for Cloud Computing (COMSATS University Islamabad, Attock Campus)
 
-Students submit an assignment link, and teachers review it. Every code change is tested automatically, and a local receiver stores the test report as JSON.
+Students submit an assignment link. Every push to GitHub runs the tests automatically, and the test report is sent to my own computer and saved as `testreport.json`.
 
-- **Backend:** Python, FastAPI, JSON file storage
-- **Frontend:** plain HTML, CSS and JavaScript (no build step)
+- **Backend:** Python + FastAPI
+- **Frontend:** plain HTML, CSS, JavaScript
 - **Tests:** pytest
 - **CI:** GitHub Actions
-- **Report receiver:** small FastAPI app that saves the test report on your computer
+- **Report receiver:** small Flask app (`backend/reciever.py`)
 
-## Requirements
+## What you need
 
-- Python >= 3.13
-- [`uv`](https://docs.astral.sh/uv/) package manager
+- Python 3.13 or newer
+- [uv](https://docs.astral.sh/uv/)
 - Git
 
-## Project Structure
+> Run every command from the **project root** (the folder that contains `backend/`, `frontend/` and `tests/`).
 
-```
-devops_mids_012/
-├── backend/
-│   ├── app.py            # Portal API (FastAPI)
-│   ├── reciever.py       # Local test-report receiver
-│   └── data/             # JSON storage (users, assignments, submissions)
-├── frontend/
-│   ├── index.html        # Login page
-│   ├── dashboard.html    # Student / teacher dashboard
-│   ├── style.css
-│   └── script.js
-├── tests/
-│   └── test_portal.py    # Automated tests
-├── .github/workflows/
-│   └── ci.yml            # CI pipeline
-├── pyproject.toml
-└── README.md
-```
-
-> **Important:** run every command below from the **project root** (the folder that contains `backend/`, `frontend/` and `tests/`). The backend imports the `backend` package and reads its data from `backend/data`, so running it from another folder will fail.
-
-## How to Run the Application
-
-1. Install dependencies:
-   ```bash
-   uv sync
-   ```
-
-2. Start the backend API (Terminal 1):
-   ```bash
-   uv run uvicorn backend.app:app --port 8000
-   ```
-   The API is now running at `http://127.0.0.1:8000`. Keep this terminal open.
-
-3. Start the frontend (Terminal 2):
-   ```bash
-   uv run python -m http.server 5500 --directory frontend
-   ```
-
-4. Open the portal in your browser: **http://localhost:5500**
-
-### Demo accounts
-
-All demo accounts use the password `password123`.
-
-| Role    | Username       | Class     |
-|---------|----------------|-----------|
-| Student | `FA23-BAI-012` | AI7       |
-| Student | `FA23-CS-001`  | CS5       |
-| Teacher | `teacher1`     | AI7 + CS5 |
-
-### Using the portal
-
-**Teacher**
-1. Sign in as `teacher1`.
-2. Open **Assignments** and click **Publish assignment** to create one for a class.
-3. Open **Submissions** to search and filter student submissions, then **Approve** or **Decline** the pending ones.
-4. The **Overview** page shows charts of review status and submissions per assignment.
-
-**Student**
-1. Sign in with your registration number.
-2. Open **Assignments** and click **Submit** next to an assignment.
-3. Enter your full name and your submission URL (for example a GitHub repository link), then submit.
-4. Track the status (Pending, Approved or Declined) on the same page. A declined submission can be resubmitted.
-
-### Validation rules
-
-- Name, registration number, assignment title and submission URL are required.
-- The submission URL must be a valid `http://` or `https://` link.
-- Invalid submissions are rejected and are not saved.
-- A student can submit each assignment once, unless it was declined.
-
-## How to Execute the Tests
-
-Run from the project root:
+## 1. Run the application
 
 ```bash
-uv run python -m pytest -v
+uv sync
 ```
 
-The test suite covers the three required cases:
+Terminal 1, the backend:
 
-| Test case                               | Expected result                                      |
-|-----------------------------------------|------------------------------------------------------|
-| Complete details and a valid URL        | Submission is saved and appears in the list          |
-| Missing registration number             | Submission is rejected with a validation message     |
-| Invalid submission URL                  | Submission is rejected and is not saved              |
+```bash
+uv run uvicorn backend.app:app --port 8000
+```
 
-If any test fails, pytest exits with a non-zero code. This is what makes the CI test stage fail.
+Terminal 2, the frontend:
 
-## How to Start the Report Receiver
+```bash
+uv run python -m http.server 5500 --directory frontend
+```
 
-The receiver is a local HTTP server that accepts the test report sent by the CI pipeline and saves it on your computer as JSON.
+Open **http://localhost:5500** in your browser.
 
-1. Start it from the project root (Terminal 3):
-   ```bash
-   uv run python backend/reciever.py
-   ```
-   It listens on `http://localhost:5000` and exposes `POST /report`.
+## 2. Run the tests
 
-2. Check that it works by sending a sample report.
+```bash
+uv run pytest -v
+```
 
-   **Windows (PowerShell):**
-   ```powershell
-   Invoke-RestMethod -Method Post -Uri http://localhost:5000/report -ContentType "application/json" -Body '{"test":"hello"}'
-   ```
+The tests check three things:
 
-   **macOS / Linux:**
-   ```bash
-   curl -X POST http://localhost:5000/report -H "Content-Type: application/json" -d '{"test":"hello"}'
-   ```
+| Test | Expected result |
+|---|---|
+| Complete details and a valid URL | Submission is saved and shows in the list |
+| Missing registration number | Rejected with a validation message |
+| Invalid submission URL | Rejected and not saved |
 
-   You should get `{"status":"success","message":"Report saved successfully"}`, and the JSON file is written in the folder you started the receiver from.
+If any test fails, pytest exits with an error, so the CI test job fails too.
 
-3. Keep the receiver running while the pipeline runs.
+## 3. Start the report receiver
 
-> **Note:** a GitHub-hosted runner's `localhost` is the runner itself, not your computer. To deliver the report from GitHub Actions to your machine, expose the receiver with a tunnel (for example ngrok or Cloudflare Tunnel) and use the tunnel URL in the pipeline, or run a self-hosted runner on your computer.
+The receiver runs on my computer and saves the report that CI sends.
 
-## Continuous Integration
+**PowerShell**
 
-The workflow in `.github/workflows/ci.yml` runs on every push to the repository. It checks out the code, installs dependencies with `uv`, and runs the automated tests. A failing test fails the pipeline.
+```powershell
+$env:RECEIVER_SECRET="my-secret"
+uv run python backend/reciever.py
+```
 
-## API Reference
+**Mac / Linux**
 
-| Method | Endpoint                 | Description                                  |
-|--------|--------------------------|----------------------------------------------|
-| POST   | `/api/login`             | Sign in and get the user's role and class    |
-| GET    | `/api/assignments`       | List assignments for a class or teacher      |
-| POST   | `/api/assignments`       | Publish a new assignment (teacher)           |
-| GET    | `/api/submissions`       | List submissions for a class or teacher      |
-| POST   | `/api/submissions`       | Submit an assignment (validated)             |
-| POST   | `/api/submissions/status`| Approve or decline a submission (teacher)    |
+```bash
+RECEIVER_SECRET=my-secret uv run python backend/reciever.py
+```
 
-Interactive API docs are available at `http://127.0.0.1:8000/docs` while the backend is running.
+It listens on port **5000** and saves the latest report as **`testreport.json`** in the project root. A copy of every report is also kept in the `reports/` folder.
 
-## Troubleshooting
+Check that it is running: open `http://127.0.0.1:5000/health`. You should see `{"status":"ok"}`.
 
-| Problem | Fix |
-|---------|-----|
-| `ModuleNotFoundError: No module named 'backend'` | You are not in the project root. Run `cd ..` until you are in the folder containing `backend/`, then run the command again. |
-| Login page says "Cannot reach the server" | The backend is not running. Start it with the command in step 2. |
-| Changes to the frontend do not appear | Hard refresh the browser with `Ctrl + F5`. |
-| Port already in use | Stop the other program using that port, or choose a different one (for example `--port 8001`). If you change the backend port, update `API` at the top of `frontend/script.js`. |
-| Pending submissions are missing | Open `http://127.0.0.1:8000/api/submissions` to see the raw data. Make sure the backend was started from the project root. |
+Keep this terminal open while the pipeline runs.
 
-## Author
-Taha
+## 4. How the pipeline works
+
+File: `.github/workflows/ci.yml`. It runs on every push and has four jobs:
+
+1. **test**: installs the project and runs pytest. The result comes from really running the tests. A failed test makes this job fail.
+2. **report**: runs after `test`, for passing **and** failing runs. It connects to my PC through Tailscale and sends the report. The receiver saves it as `testreport.json`.
+3. **email** (bonus): emails the report for passing and failing runs.
+4. **deploy** (bonus): publishes the frontend to GitHub Pages, only on `main` and only if all tests passed.
+
+The report contains:
+- repository, branch, commit SHA, run id and timestamp
+- every test's name, result and failure message
+- total, passed and failed counts, and the overall status
+
+## 5. GitHub secrets
+
+Go to **Settings → Secrets and variables → Actions** and add these.
+
+**For sending the report to my PC (Tailscale)**
+
+| Secret | What it is |
+|---|---|
+| `TS_AUTHKEY` | Tailscale auth key (reusable) |
+| `PC_TAILSCALE_IP` | My PC's Tailscale IP (run `tailscale ip -4`) |
+| `RECEIVER_SECRET` | Same value I set when starting the receiver |
+
+Also: Tailscale must be running on my PC, and Windows Firewall must allow port 5000.
+
+**For the email report (Brevo)**
+
+| Secret | What it is |
+|---|---|
+| `BREVO_API_KEY` | Brevo API key |
+| `EMAIL_FROM` | Sender address verified in Brevo |
+| `EMAIL_TO` | Address that gets the report (can be changed any time) |
+
+In Brevo, turn off the Authorised IPs blocking, because GitHub's IP address changes on every run.
+
+## 6. GitHub Pages (bonus)
+
+1. Go to **Settings → Pages**.
+2. Set **Source** to **GitHub Actions**.
+3. Push to `main`. When the tests pass, the `deploy` job publishes the site.
+
+Live URL: **https://cybrs07.github.io/devops_mids_012/**
+
+Pages cannot run the Python backend, so the live site is a static demo of the frontend. Sign-in needs the backend running locally.
+
+If tests fail, the `deploy` job is skipped and the old site stays as it is.
+
+## 7. Demo steps
+
+1. **Passing run:** push any small change. The run is green and `testreport.json` shows `"status": "passed"`.
+2. **Failing run:** in `backend/app.py`, change `if not value.strip():` to `if False:` and push. The `test` job turns red and `testreport.json` shows `"status": "failed"` with the failure messages.
+3. **Fixed run:** put the line back and push. The run is green again.
+
+## Project structure
+
+```
+.
+├── .github/workflows/ci.yml   # pipeline
+├── backend/
+│   ├── app.py                 # portal API
+│   ├── reciever.py            # local report receiver
+│   └── data/                  # JSON storage
+├── frontend/                  # HTML, CSS, JS
+├── scripts/
+│   ├── send_report.py         # builds the report and sends it to the receiver
+│   └── send_email.py          # emails the report
+├── tests/test_portal.py       # automated tests
+├── pyproject.toml
+└── uv.lock
+```
