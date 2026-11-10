@@ -8,38 +8,50 @@ jobs:
   test:
     name: Run automated tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout pushed revision
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up uv (uses Python from .python-version)
-        uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
       - name: Install dependencies
         run: uv sync
 
-      # A failing test makes pytest exit non-zero, which fails this step
-      # and therefore the job. No continue-on-error here.
+      # A failing test makes pytest exit non-zero -> this step and the job fail.
       - name: Run tests
         run: uv run pytest -v --json-report --json-report-file=report.json
 
-      - name: Show test summary
-        if: always()
-        run: |
-          echo "### Test results" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f report.json ]; then
-            uv run python -c "import json; print(json.load(open('report.json'))['summary'])" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "No report generated (tests did not run)" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Upload raw pytest report
+      - name: Upload pytest report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pytest-report
           path: report.json
           if-no-files-found: warn
+
+  report:
+    name: Send report to local receiver
+    needs: test
+    if: always()          # run for passing AND failing test runs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download pytest report
+        uses: actions/download-artifact@v4
+        with:
+          name: pytest-report
+        continue-on-error: true   # missing if tests crashed before writing it
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+
+      - name: Send report to PC
+        env:
+          PC_TAILSCALE_IP: ${{ secrets.PC_TAILSCALE_IP }}
+          RECEIVER_SECRET: ${{ secrets.RECEIVER_SECRET }}
+          TEST_JOB_RESULT: ${{ needs.test.result }}
+        run: python3 scripts/send_report.py
