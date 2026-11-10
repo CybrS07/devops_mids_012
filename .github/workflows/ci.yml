@@ -4,10 +4,15 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  # ---------------------------------------------------------------- 1. TESTS
   test:
     name: Run automated tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -30,11 +35,13 @@ jobs:
           path: report.json
           if-no-files-found: warn
 
+  # ------------------------------------------- 2. REPORT TO MY PC (Tailscale)
   report:
     name: Send report to local receiver
     needs: test
-    if: always()          # run for passing AND failing test runs
+    if: ${{ !cancelled() }}      # runs for passing AND failing test runs
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -56,11 +63,13 @@ jobs:
           TEST_JOB_RESULT: ${{ needs.test.result }}
         run: python3 scripts/send_report.py
 
+  # ------------------------------------------------------- 3. EMAIL (bonus)
   email:
     name: Email test report
     needs: test
-    if: always()          # passing AND failing runs
+    if: ${{ !cancelled() }}      # passing AND failing runs
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -72,26 +81,32 @@ jobs:
 
       - name: Send email
         env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           TEST_JOB_RESULT: ${{ needs.test.result }}
         run: python3 scripts/send_email.py
 
+  # ------------------------------------------------ 4. GITHUB PAGES (bonus)
   deploy:
     name: Deploy to GitHub Pages
     needs: test
-    # Only on main, and only if ALL tests passed. Otherwise this job is skipped
-    # and the previously published site stays untouched.
-    if: github.ref == 'refs/heads/main' && needs.test.result == 'success'
+    # Only on main AND only when every test passed. If tests fail this job is
+    # skipped, so the previously published site stays unchanged.
+    if: ${{ github.ref == 'refs/heads/main' && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
+      contents: read
       pages: write
       id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -100,6 +115,6 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: frontend
+          path: frontend          # only the frontend folder is published
       - id: deployment
         uses: actions/deploy-pages@v4
