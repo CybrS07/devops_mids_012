@@ -80,8 +80,18 @@ def main() -> int:
         server.starttls(context=ctx)
     with server:
         server.login(user, password)
-        server.send_message(msg)
-    print(f"Report emailed to {to} ({payload['summary']['status']})")
+        # Debug AFTER login so credentials are never printed. Shows the SMTP
+        # conversation: MAIL FROM, RCPT TO, and the server's final reply
+        # (e.g. "250 2.0.0 OK queued as <id>").
+        server.set_debuglevel(1)
+        refused = server.send_message(msg)
+    if refused:
+        print(f"Some recipients were REFUSED by the server: {refused}")
+        return 1
+    print(f"Sender : {msg['From']}")
+    print(f"To     : {msg['To']}")
+    print(f"Subject: {msg['Subject']}")
+    print(f"Report handed to {host} for delivery ({payload['summary']['status']})")
     return 0
 
 
